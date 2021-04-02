@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NewTransaction extends StatefulWidget {
   final Function adTx;
@@ -10,19 +11,39 @@ class NewTransaction extends StatefulWidget {
 }
 
 class _NewTransactionState extends State<NewTransaction> {
-  final titleController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _amountController = TextEditingController();
+  DateTime _selectedDate;
 
-  final amountController = TextEditingController();
-
-  submitData() {
-    final enteredTitle = titleController.text;
-    final enteredAmount = double.parse(amountController.text);
-    if (enteredTitle.isEmpty || enteredAmount <= 0) {
+  _submitData() {
+    if (_amountController.text.isEmpty) {
       return;
     }
 
-    widget.adTx(enteredTitle, enteredAmount);
+    final enteredTitle = _titleController.text;
+    final enteredAmount = double.parse(_amountController.text);
+    if (enteredTitle.isEmpty || enteredAmount <= 0 || _selectedDate == null) {
+      return;
+    }
+
+    widget.adTx(enteredTitle, enteredAmount, _selectedDate);
     Navigator.of(context).pop();
+  }
+
+  void _presentDataPicker() {
+    showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(2021),
+            lastDate: DateTime.now())
+        .then((pickerDate) {
+      if (pickerDate == null) {
+        return;
+      }
+      setState(() {
+        _selectedDate = pickerDate;
+      });
+    });
   }
 
   @override
@@ -35,24 +56,47 @@ class _NewTransactionState extends State<NewTransaction> {
           children: [
             TextField(
               decoration: InputDecoration(labelText: 'title'),
-              controller: titleController,
+              controller: _titleController,
               keyboardType: TextInputType.text,
               textInputAction: TextInputAction.next,
             ),
             TextField(
               decoration: InputDecoration(labelText: 'amount'),
-              controller: amountController,
+              controller: _amountController,
               keyboardType:
                   TextInputType.numberWithOptions(signed: true, decimal: true),
-              onSubmitted: (_) => submitData(),
+              onSubmitted: (_) => _submitData(),
             ),
-            TextButton(
-              child: Text(
-                'Add Transaction',
-                style: TextStyle(color: Colors.purple),
+            Container(
+              height: 70,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                      child: Text(_selectedDate == null
+                          ? 'No Date Chosen!'
+                          : 'Picked Date: ${DateFormat.yMd().format(_selectedDate)}')),
+                  TextButton(
+                    child: Text('Choose Date',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: _presentDataPicker,
+                  )
+                ],
               ),
-              onPressed: () => submitData(),
-            )
+            ),
+            Align(
+              alignment: Alignment.topRight,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Theme.of(context).primaryColor,
+                  textStyle: Theme.of(context).textTheme.button,
+                ),
+                child: Text(
+                  'Add Transaction',
+                ),
+                onPressed: _submitData,
+              ),
+            ),
           ],
         ),
       ),

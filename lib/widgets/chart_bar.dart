@@ -9,7 +9,6 @@ class ChartBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(spendingPctOfTotal);
     return Column(
       children: [
         Container(
